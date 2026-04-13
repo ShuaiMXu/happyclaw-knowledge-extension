@@ -112,10 +112,45 @@ function bindEvents() {
   $('#btn-settings').addEventListener('click', loadSettingsForm);
 }
 
+// Strip common SPA routes users accidentally paste (e.g.
+// `https://claw.example.com/chat` → `https://claw.example.com`).
+// Request URL would otherwise become `/chat/api/...` and get caught by
+// the SPA fallback, returning HTML instead of JSON.
+const SPA_PATH_SUFFIXES = [
+  '/chat', '/settings', '/login', '/register', '/setup',
+  '/monitor', '/tasks', '/memory', '/skills', '/users',
+  '/mcp-servers', '/groups',
+];
+
+function normalizeServerUrl(raw) {
+  let url = (raw || '').trim().replace(/\/+$/, '');
+  if (!url) return '';
+  const lower = url.toLowerCase();
+  for (const suffix of SPA_PATH_SUFFIXES) {
+    if (lower.endsWith(suffix)) {
+      url = url.slice(0, url.length - suffix.length);
+      break;
+    }
+    // Also strip paths like /chat/anything
+    const idx = lower.indexOf(suffix + '/');
+    if (idx !== -1) {
+      url = url.slice(0, idx);
+      break;
+    }
+  }
+  return url.replace(/\/+$/, '');
+}
+
 function scheduleAutoSave() {
   if (settingsSaveTimer) clearTimeout(settingsSaveTimer);
   settingsSaveTimer = setTimeout(async () => {
-    const serverUrl = $('#server-url').value.trim().replace(/\/+$/, '');
+    const rawUrl = $('#server-url').value;
+    const serverUrl = normalizeServerUrl(rawUrl);
+    // If we trimmed something, reflect it back to the field so the user sees
+    // the actual URL being saved (avoids silent path-strip surprises).
+    if (serverUrl && serverUrl !== rawUrl.trim().replace(/\/+$/, '')) {
+      $('#server-url').value = serverUrl;
+    }
     const apiToken = $('#api-token').value.trim();
     await chrome.storage.local.set({ serverUrl, apiToken });
     const hint = $('#autosave-hint');
@@ -305,7 +340,8 @@ async function loadSettingsForm() {
 }
 
 async function handleSaveSettings() {
-  const serverUrl = $('#server-url').value.trim().replace(/\/+$/, '');
+  const serverUrl = normalizeServerUrl($('#server-url').value);
+  $('#server-url').value = serverUrl;
   const apiToken = $('#api-token').value.trim();
 
   if (!serverUrl) {
@@ -325,7 +361,8 @@ async function handleSaveSettings() {
 }
 
 async function handleTestConnection() {
-  const serverUrl = $('#server-url').value.trim().replace(/\/+$/, '');
+  const serverUrl = normalizeServerUrl($('#server-url').value);
+  $('#server-url').value = serverUrl;
   const apiToken = $('#api-token').value.trim();
   const resultEl = $('#conn-result');
   const btn = $('#btn-test-conn');
@@ -347,9 +384,13 @@ async function handleTestConnection() {
       signal: AbortSignal.timeout(8000),
     });
 
-    if (resp.ok) {
+    const ctype = resp.headers.get('content-type') || '';
+    if (resp.ok && ctype.includes('application/json')) {
       resultEl.className = 'conn-result success';
       resultEl.textContent = '连接成功! 服务器运行正常。';
+    } else if (resp.ok && !ctype.includes('application/json')) {
+      resultEl.className = 'conn-result error';
+      resultEl.textContent = '地址可能错了：服务器返回的是网页而不是 API。请确认只填根域名（如 https://example.com），不要带 /chat、/settings 等页面路径。';
     } else {
       resultEl.className = 'conn-result error';
       resultEl.textContent = `连接失败: HTTP ${resp.status}`;
@@ -404,6 +445,8 @@ async function apiCall(method, path, body) {
   }
 
   const resp = await fetch(`${config.serverUrl}${path}`, opts);
+  const ctype = resp.headers.get('content-type') || '';
+
   if (!resp.ok) {
     let msg = `HTTP ${resp.status}`;
     try {
@@ -411,6 +454,11 @@ async function apiCall(method, path, body) {
       if (errData.error) msg = errData.error;
     } catch (_) {}
     throw new Error(msg);
+  }
+
+  // Guard against SPA fallback / misconfigured reverse proxy returning HTML.
+  if (!ctype.includes('application/json')) {
+    throw new Error('服务器返回了网页而不是 API。请在扩展设置里把服务器地址改为根域名（去掉 /chat 等路径）');
   }
 
   const text = await resp.text();
