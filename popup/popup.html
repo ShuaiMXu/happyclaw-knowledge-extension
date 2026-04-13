@@ -70,6 +70,25 @@
       </div>
     </section>
 
+    <!-- 已保存的收藏列表 -->
+    <section class="clips-section">
+      <div class="section-header">
+        <h2 class="section-title">已保存</h2>
+        <div class="clips-filter">
+          <span id="clips-filter-label" class="filter-label" title="点击清除筛选">全部</span>
+          <button id="btn-refresh-clips" class="icon-btn" title="刷新">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="23 4 23 10 17 10"/>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div id="clips-list" class="clips-list">
+        <div class="loading">加载中...</div>
+      </div>
+    </section>
+
     <!-- 新建分类表单 -->
     <div id="category-form" class="category-form" style="display:none">
       <input type="text" id="cat-name" class="input" placeholder="分类名称" maxlength="30">
@@ -143,7 +162,7 @@
     </section>
 
     <section class="settings-info">
-      <p class="info-text">HappyClaw 知识收藏 v1.0.2</p>
+      <p class="info-text">HappyClaw 知识收藏 v1.0.3</p>
       <p class="info-text">快捷键: Ctrl+Shift+S 快速保存</p>
     </section>
   </div>

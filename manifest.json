@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "HappyClaw 知识收藏",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "将网页内容保存到 HappyClaw 知识库",
   "permissions": [
     "storage",

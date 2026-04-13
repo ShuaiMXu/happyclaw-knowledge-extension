@@ -4,10 +4,15 @@ const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
 
 let categories = [];
+let clips = [];
+let clipsFilter = null; // category_id or null for all
+let editingClipId = null;
 let selectedColor = '#F57F28';
 let currentTab = null;
 let selectedText = '';
 let settingsSaveTimer = null;
+
+const CLIPS_PAGE_SIZE = 30;
 
 // ─── Init ───────────────────────────────────────────────────────────
 
@@ -59,9 +64,34 @@ async function checkConnectionAndLoad() {
     updateStatus('connected', '已连接');
     renderCategories();
     renderCategorySelect();
+    await loadClips();
   } catch (err) {
     updateStatus('error', '连接失败');
     $('#categories-list').innerHTML = `<div class="empty-state">连接失败: ${err.message}</div>`;
+    $('#clips-list').innerHTML = '';
+  }
+}
+
+async function loadClips() {
+  const list = $('#clips-list');
+  list.innerHTML = '<div class="loading">加载中...</div>';
+  const label = $('#clips-filter-label');
+  if (clipsFilter) {
+    const cat = categories.find((c) => c.id === clipsFilter);
+    label.textContent = cat ? `分类: ${cat.name}` : '分类筛选';
+    label.classList.add('active');
+  } else {
+    label.textContent = '全部';
+    label.classList.remove('active');
+  }
+
+  try {
+    const qs = new URLSearchParams({ limit: String(CLIPS_PAGE_SIZE), offset: '0' });
+    if (clipsFilter) qs.set('category_id', clipsFilter);
+    clips = await apiCall('GET', `/api/knowledge/clips?${qs.toString()}`);
+    renderClips();
+  } catch (err) {
+    list.innerHTML = `<div class="empty-state">加载失败: ${escapeHtml(err.message)}</div>`;
   }
 }
 
@@ -93,6 +123,15 @@ function bindEvents() {
       dot.classList.add('selected');
       selectedColor = dot.dataset.color;
     });
+  });
+
+  // Clips list
+  $('#btn-refresh-clips').addEventListener('click', () => loadClips());
+  $('#clips-filter-label').addEventListener('click', () => {
+    if (clipsFilter) {
+      clipsFilter = null;
+      loadClips();
+    }
   });
 
   // Settings
@@ -212,6 +251,8 @@ async function handleQuickSave() {
     selectedText = '';
     $('#selection-preview').style.display = 'none';
     $('#tags-input').value = '';
+    // Refresh saved-clips list so the new entry shows up immediately
+    await loadClips();
   } catch (err) {
     showToast(`保存失败: ${err.message}`, 'error');
   } finally {
@@ -273,14 +314,171 @@ function renderCategories() {
     });
   });
 
-  // Click category to select it in dropdown
+  // Click category to select it in dropdown AND filter saved clips by it
   list.querySelectorAll('.category-item').forEach((item) => {
     item.addEventListener('click', () => {
-      $('#category-select').value = item.dataset.id;
+      const id = item.dataset.id;
+      $('#category-select').value = id;
       list.querySelectorAll('.category-item').forEach((i) => i.classList.remove('selected'));
       item.classList.add('selected');
+      clipsFilter = id;
+      loadClips();
     });
   });
+}
+
+// ─── Saved Clips ────────────────────────────────────────────────────
+
+function renderClips() {
+  const list = $('#clips-list');
+  if (!clips || clips.length === 0) {
+    list.innerHTML = '<div class="empty-state">暂无收藏</div>';
+    return;
+  }
+
+  list.innerHTML = clips
+    .map((clip) => {
+      const isEditing = clip.id === editingClipId;
+      const tagText = (clip.tags || []).join(', ');
+      const catOptions = ['<option value="">（未分类）</option>']
+        .concat(
+          categories.map(
+            (c) =>
+              `<option value="${c.id}"${clip.category_id === c.id ? ' selected' : ''}>${escapeHtml(c.name)}</option>`,
+          ),
+        )
+        .join('');
+      const urlLine = clip.url
+        ? `<a class="clip-url" href="${escapeAttr(clip.url)}" target="_blank" rel="noreferrer noopener">${escapeHtml(clip.url)}</a>`
+        : '';
+      const meta = [
+        clip.category_name ? `<span class="clip-tag clip-cat">${escapeHtml(clip.category_name)}</span>` : '',
+        ...(clip.tags || []).map((t) => `<span class="clip-tag">#${escapeHtml(t)}</span>`),
+      ]
+        .filter(Boolean)
+        .join(' ');
+
+      if (isEditing) {
+        return `
+    <div class="clip-item editing" data-id="${clip.id}">
+      <input type="text" class="input clip-edit-title" value="${escapeAttr(clip.title)}" placeholder="标题" maxlength="500">
+      <select class="input clip-edit-category">${catOptions}</select>
+      <input type="text" class="input clip-edit-tags" value="${escapeAttr(tagText)}" placeholder="标签（逗号分隔）">
+      <textarea class="input clip-edit-summary" placeholder="摘要（可选）" rows="2" maxlength="5000">${escapeHtml(clip.summary || '')}</textarea>
+      <div class="form-actions">
+        <button class="btn btn-ghost btn-cancel-clip" data-id="${clip.id}">取消</button>
+        <button class="btn btn-primary btn-save-clip" data-id="${clip.id}">保存</button>
+      </div>
+    </div>`;
+      }
+
+      return `
+    <div class="clip-item" data-id="${clip.id}">
+      <div class="clip-main">
+        <div class="clip-title" title="${escapeAttr(clip.title)}">${escapeHtml(clip.title)}</div>
+        ${urlLine}
+        ${meta ? `<div class="clip-meta">${meta}</div>` : ''}
+      </div>
+      <div class="clip-actions">
+        <button class="icon-btn btn-edit-clip" data-id="${clip.id}" title="编辑">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+        </button>
+        <button class="btn-danger btn-delete-clip" data-id="${clip.id}" title="删除">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3,6 5,6 21,6"/>
+            <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+          </svg>
+        </button>
+      </div>
+    </div>`;
+    })
+    .join('');
+
+  list.querySelectorAll('.btn-edit-clip').forEach((btn) =>
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      editingClipId = btn.dataset.id;
+      renderClips();
+    }),
+  );
+  list.querySelectorAll('.btn-cancel-clip').forEach((btn) =>
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      editingClipId = null;
+      renderClips();
+    }),
+  );
+  list.querySelectorAll('.btn-save-clip').forEach((btn) =>
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      handleSaveClipEdit(btn.dataset.id);
+    }),
+  );
+  list.querySelectorAll('.btn-delete-clip').forEach((btn) =>
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      handleDeleteClip(btn.dataset.id);
+    }),
+  );
+}
+
+async function handleDeleteClip(id) {
+  const clip = clips.find((c) => c.id === id);
+  if (!confirm(`确认删除「${clip?.title || '此条'}」？会同时删除 Markdown 镜像文件。`)) return;
+  try {
+    await apiCall('DELETE', `/api/knowledge/clips/${id}`);
+    // Sync local state so the deleted entry disappears immediately — avoids
+    // showing stale records before the next refresh.
+    clips = clips.filter((c) => c.id !== id);
+    if (editingClipId === id) editingClipId = null;
+    renderClips();
+    // Categories show clip_count; refresh them too.
+    try {
+      categories = await apiCall('GET', '/api/knowledge/categories');
+      renderCategories();
+      renderCategorySelect();
+    } catch (_) {}
+    showToast('已删除', 'info');
+  } catch (err) {
+    showToast(`删除失败: ${err.message}`, 'error');
+  }
+}
+
+async function handleSaveClipEdit(id) {
+  const item = document.querySelector(`.clip-item.editing[data-id="${id}"]`);
+  if (!item) return;
+  const title = item.querySelector('.clip-edit-title').value.trim();
+  if (!title) {
+    showToast('标题不能为空', 'error');
+    return;
+  }
+  const category_id = item.querySelector('.clip-edit-category').value || null;
+  const tagsRaw = item.querySelector('.clip-edit-tags').value.trim();
+  const tags = tagsRaw ? tagsRaw.split(/[,，]/).map((t) => t.trim()).filter(Boolean) : [];
+  const summary = item.querySelector('.clip-edit-summary').value.trim();
+
+  try {
+    const updated = await apiCall('PATCH', `/api/knowledge/clips/${id}`, {
+      title,
+      category_id,
+      tags,
+      summary: summary || undefined,
+    });
+    // Merge updated fields into local state
+    const idx = clips.findIndex((c) => c.id === id);
+    if (idx !== -1) {
+      const catName = categories.find((c) => c.id === updated.category_id)?.name || null;
+      clips[idx] = { ...clips[idx], ...updated, category_name: catName };
+    }
+    editingClipId = null;
+    renderClips();
+    showToast('已更新', 'success');
+  } catch (err) {
+    showToast(`保存失败: ${err.message}`, 'error');
+  }
 }
 
 function renderCategorySelect() {
@@ -485,6 +683,10 @@ function showToast(message, type = 'info') {
 
 function escapeHtml(str) {
   const div = document.createElement('div');
-  div.textContent = str;
+  div.textContent = str == null ? '' : String(str);
   return div.innerHTML;
+}
+
+function escapeAttr(str) {
+  return escapeHtml(str).replace(/"/g, '&quot;');
 }
