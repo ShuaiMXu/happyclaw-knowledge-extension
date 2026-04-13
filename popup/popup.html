@@ -113,14 +113,14 @@
 
     <section class="settings-form">
       <div class="form-group">
-        <label class="label" for="server-url">服务器地址</label>
-        <input type="url" id="server-url" class="input" placeholder="https://your-happyclaw.example.com">
+        <label class="label" for="server-url">① 服务器地址</label>
+        <input type="url" id="server-url" class="input" placeholder="https://claw.shakaka.xyz">
         <p class="hint">HappyClaw 服务的完整 URL（不含尾部斜杠）</p>
       </div>
       <div class="form-group">
-        <label class="label" for="api-token">API Token</label>
+        <label class="label" for="api-token">② API Token</label>
         <div class="token-row">
-          <input type="password" id="api-token" class="input" placeholder="输入 API Token">
+          <input type="password" id="api-token" class="input" placeholder="hc_xxx...">
           <button id="btn-toggle-token" class="icon-btn" title="显示/隐藏">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -128,7 +128,9 @@
             </svg>
           </button>
         </div>
-        <p class="hint">用于身份验证的令牌</p>
+        <p class="hint">
+          在 HappyClaw <a id="token-link" href="#" target="_blank" rel="noopener">设置 → 浏览器扩展</a> 页面点「生成」按钮即可
+        </p>
       </div>
       <div class="form-group">
         <button id="btn-test-conn" class="btn btn-secondary btn-full">

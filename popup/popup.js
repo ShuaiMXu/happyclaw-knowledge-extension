@@ -104,6 +104,9 @@ function bindEvents() {
 
   // Load saved settings into form when switching to settings
   $('#btn-settings').addEventListener('click', loadSettingsForm);
+
+  // Keep the "get token" link in sync with the server URL input
+  $('#server-url').addEventListener('input', updateTokenLink);
 }
 
 function switchView(view) {
@@ -278,6 +281,15 @@ async function loadSettingsForm() {
   const config = await getConfig();
   $('#server-url').value = config.serverUrl || '';
   $('#api-token').value = config.apiToken || '';
+  updateTokenLink();
+}
+
+function updateTokenLink() {
+  const link = $('#token-link');
+  if (!link) return;
+  const raw = $('#server-url').value.trim().replace(/\/+$/, '');
+  const base = raw || 'https://claw.shakaka.xyz';
+  link.href = `${base}/settings?tab=extension`;
 }
 
 async function handleSaveSettings() {
