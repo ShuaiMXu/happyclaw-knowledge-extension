@@ -1,14 +1,16 @@
 :root {
-  --teal-50: #f0fdfa;
-  --teal-100: #ccfbf1;
-  --teal-200: #99f6e4;
-  --teal-300: #5eead4;
-  --teal-400: #2dd4bf;
-  --teal-500: #14b8a6;
-  --teal-600: #0d9488;
-  --teal-700: #0f766e;
-  --teal-800: #115e59;
-  --teal-900: #134e4a;
+  /* HappyClaw brand — warm orange on cream */
+  --brand-50: #FFF9E0;
+  --brand-100: #FFECC2;
+  --brand-200: #FFD492;
+  --brand-300: #FFB864;
+  --brand-400: #FA9A43;
+  --brand-500: #F57F28;
+  --brand-600: #D9661A;
+  --brand-700: #B34F12;
+  --brand-800: #8A3C0E;
+  --brand-900: #5E2A09;
+  --brand-ring: rgba(245, 127, 40, 0.18);
 
   --gray-50: #f9fafb;
   --gray-100: #f3f4f6;
@@ -166,12 +168,12 @@ body::-webkit-scrollbar-thumb {
 }
 
 .btn-primary {
-  background: var(--teal-500);
+  background: var(--brand-500);
   color: #fff;
 }
 
 .btn-primary:hover {
-  background: var(--teal-600);
+  background: var(--brand-600);
 }
 
 .btn-primary:disabled {
@@ -253,7 +255,7 @@ body::-webkit-scrollbar-thumb {
 
 .selection-label {
   font-size: 11px;
-  color: var(--teal-500);
+  color: var(--brand-500);
   font-weight: 500;
   margin-bottom: 4px;
 }
@@ -292,8 +294,8 @@ body::-webkit-scrollbar-thumb {
 }
 
 .category-select:focus {
-  border-color: var(--teal-500);
-  box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.15);
+  border-color: var(--brand-500);
+  box-shadow: 0 0 0 2px var(--brand-ring);
 }
 
 .tags-row {
@@ -312,8 +314,8 @@ body::-webkit-scrollbar-thumb {
 }
 
 .tags-input:focus {
-  border-color: var(--teal-500);
-  box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.15);
+  border-color: var(--brand-500);
+  box-shadow: 0 0 0 2px var(--brand-ring);
 }
 
 .tags-input::placeholder {
@@ -361,12 +363,12 @@ body::-webkit-scrollbar-thumb {
 }
 
 .category-item.selected {
-  background: var(--teal-50);
+  background: var(--brand-50);
 }
 
 @media (prefers-color-scheme: dark) {
   .category-item.selected {
-    background: rgba(20, 184, 166, 0.1);
+    background: rgba(245, 127, 40, 0.12);
   }
 }
 
@@ -440,8 +442,8 @@ body::-webkit-scrollbar-thumb {
 }
 
 .input:focus {
-  border-color: var(--teal-500);
-  box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.15);
+  border-color: var(--brand-500);
+  box-shadow: 0 0 0 2px var(--brand-ring);
 }
 
 .input::placeholder {
@@ -543,6 +545,19 @@ body::-webkit-scrollbar-thumb {
   border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
+.autosave-hint {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-align: center;
+  margin-bottom: 8px;
+  transition: color 0.2s;
+}
+
+.autosave-hint.autosave-ok {
+  color: var(--brand-500);
+  font-weight: 500;
+}
+
 .settings-info {
   padding: 16px;
   border-top: 1px solid var(--border);
@@ -581,7 +596,7 @@ body::-webkit-scrollbar-thumb {
 }
 
 .toast.info {
-  background: var(--teal-500);
+  background: var(--brand-500);
 }
 
 @keyframes toast-in {

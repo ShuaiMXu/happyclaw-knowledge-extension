@@ -4,9 +4,10 @@ const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
 
 let categories = [];
-let selectedColor = '#14b8a6';
+let selectedColor = '#F57F28';
 let currentTab = null;
 let selectedText = '';
+let settingsSaveTimer = null;
 
 // ─── Init ───────────────────────────────────────────────────────────
 
@@ -102,11 +103,31 @@ function bindEvents() {
     input.type = input.type === 'password' ? 'text' : 'password';
   });
 
+  // Auto-save on input so switching tabs to copy a token doesn't lose
+  // what the user has already typed. The popup closes when it loses focus.
+  $('#server-url').addEventListener('input', scheduleAutoSave);
+  $('#api-token').addEventListener('input', scheduleAutoSave);
+
   // Load saved settings into form when switching to settings
   $('#btn-settings').addEventListener('click', loadSettingsForm);
+}
 
-  // Keep the "get token" link in sync with the server URL input
-  $('#server-url').addEventListener('input', updateTokenLink);
+function scheduleAutoSave() {
+  if (settingsSaveTimer) clearTimeout(settingsSaveTimer);
+  settingsSaveTimer = setTimeout(async () => {
+    const serverUrl = $('#server-url').value.trim().replace(/\/+$/, '');
+    const apiToken = $('#api-token').value.trim();
+    await chrome.storage.local.set({ serverUrl, apiToken });
+    const hint = $('#autosave-hint');
+    if (hint) {
+      hint.textContent = '✓ 已自动保存';
+      hint.classList.add('autosave-ok');
+      setTimeout(() => {
+        hint.textContent = '输入会自动保存，切换标签页去复制 Token 不会丢';
+        hint.classList.remove('autosave-ok');
+      }, 1500);
+    }
+  }, 300);
 }
 
 function switchView(view) {
@@ -183,7 +204,7 @@ function renderCategories() {
     .map(
       (cat) => `
     <div class="category-item" data-id="${cat.id}">
-      <span class="cat-color" style="background:${cat.color || '#14b8a6'}"></span>
+      <span class="cat-color" style="background:${cat.color || '#F57F28'}"></span>
       <div class="cat-info">
         <div class="cat-name">${escapeHtml(cat.name)}</div>
         <div class="cat-meta">${cat.description ? escapeHtml(cat.description) + ' · ' : ''}${cat.clip_count || 0} 条</div>
@@ -272,7 +293,7 @@ function resetCategoryForm() {
   $('#cat-desc').value = '';
   $$('.color-dot').forEach((d) => d.classList.remove('selected'));
   $$('.color-dot')[0]?.classList.add('selected');
-  selectedColor = '#14b8a6';
+  selectedColor = '#F57F28';
 }
 
 // ─── Settings ───────────────────────────────────────────────────────
@@ -281,15 +302,6 @@ async function loadSettingsForm() {
   const config = await getConfig();
   $('#server-url').value = config.serverUrl || '';
   $('#api-token').value = config.apiToken || '';
-  updateTokenLink();
-}
-
-function updateTokenLink() {
-  const link = $('#token-link');
-  if (!link) return;
-  const raw = $('#server-url').value.trim().replace(/\/+$/, '');
-  const base = raw || 'https://claw.shakaka.xyz';
-  link.href = `${base}/settings?tab=extension`;
 }
 
 async function handleSaveSettings() {

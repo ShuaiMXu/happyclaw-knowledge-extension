@@ -11,11 +11,7 @@
   <div id="main-view" class="view">
     <header class="header">
       <div class="header-left">
-        <svg class="logo" width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="11" fill="#14b8a6"/>
-          <path d="M8 10c0-1.1.9-2 2-2h4c1.1 0 2 .9 2 2v6c0 1.1-.9 2-2 2h-4c-1.1 0-2-.9-2-2v-6z" fill="#fff"/>
-          <path d="M10 8V6c0-1.1.9-2 2-2s2 .9 2 2v2" stroke="#fff" stroke-width="1.5" fill="none"/>
-        </svg>
+        <img class="logo" src="../icons/icon48.png" width="24" height="24" alt="HappyClaw">
         <h1 class="title">HappyClaw</h1>
       </div>
       <div class="header-right">
@@ -81,14 +77,14 @@
       <div class="color-picker">
         <span class="color-label">颜色</span>
         <div class="color-options" id="color-options">
-          <button class="color-dot selected" data-color="#14b8a6" style="background:#14b8a6"></button>
+          <button class="color-dot selected" data-color="#F57F28" style="background:#F57F28"></button>
           <button class="color-dot" data-color="#f59e0b" style="background:#f59e0b"></button>
           <button class="color-dot" data-color="#ef4444" style="background:#ef4444"></button>
           <button class="color-dot" data-color="#8b5cf6" style="background:#8b5cf6"></button>
           <button class="color-dot" data-color="#3b82f6" style="background:#3b82f6"></button>
           <button class="color-dot" data-color="#ec4899" style="background:#ec4899"></button>
           <button class="color-dot" data-color="#10b981" style="background:#10b981"></button>
-          <button class="color-dot" data-color="#6366f1" style="background:#6366f1"></button>
+          <button class="color-dot" data-color="#14b8a6" style="background:#14b8a6"></button>
         </div>
       </div>
       <div class="form-actions">
@@ -113,14 +109,14 @@
 
     <section class="settings-form">
       <div class="form-group">
-        <label class="label" for="server-url">① 服务器地址</label>
-        <input type="url" id="server-url" class="input" placeholder="https://claw.shakaka.xyz">
+        <label class="label" for="server-url">服务器地址</label>
+        <input type="url" id="server-url" class="input" placeholder="https://your-happyclaw.example.com">
         <p class="hint">HappyClaw 服务的完整 URL（不含尾部斜杠）</p>
       </div>
       <div class="form-group">
-        <label class="label" for="api-token">② API Token</label>
+        <label class="label" for="api-token">API Token</label>
         <div class="token-row">
-          <input type="password" id="api-token" class="input" placeholder="hc_xxx...">
+          <input type="password" id="api-token" class="input" placeholder="输入 API Token">
           <button id="btn-toggle-token" class="icon-btn" title="显示/隐藏">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -128,9 +124,7 @@
             </svg>
           </button>
         </div>
-        <p class="hint">
-          在 HappyClaw <a id="token-link" href="#" target="_blank" rel="noopener">设置 → 浏览器扩展</a> 页面点「生成」按钮即可
-        </p>
+        <p class="hint">用于身份验证的令牌</p>
       </div>
       <div class="form-group">
         <button id="btn-test-conn" class="btn btn-secondary btn-full">
@@ -143,12 +137,13 @@
         <div id="conn-result" class="conn-result" style="display:none"></div>
       </div>
       <div class="form-group">
+        <p id="autosave-hint" class="autosave-hint">输入会自动保存，切换标签页去复制 Token 不会丢</p>
         <button id="btn-save-settings" class="btn btn-primary btn-full">保存设置</button>
       </div>
     </section>
 
     <section class="settings-info">
-      <p class="info-text">HappyClaw 知识收藏 v1.0.0</p>
+      <p class="info-text">HappyClaw 知识收藏 v1.0.1</p>
       <p class="info-text">快捷键: Ctrl+Shift+S 快速保存</p>
     </section>
   </div>

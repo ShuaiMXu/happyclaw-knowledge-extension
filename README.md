@@ -17,26 +17,15 @@
 1. 打开 Chrome，访问 `chrome://extensions/`
 2. 开启右上角的「开发者模式」
 3. 点击「加载已解压的扩展程序」
-4. 选择本仓库根目录（包含 `manifest.json` 的目录）
+4. 选择 `chrome-extension/` 目录
 
-## 配置（3 步完事）
+## 配置
 
-### 1. 在 HappyClaw 生成 Token
-
-登录你的 HappyClaw → **设置 → 浏览器扩展** → 点「生成」按钮 → 自动复制到剪贴板。
-
-> Token 只显示一次，生成后立刻回到扩展粘贴。忘了再点一次「重新生成」，旧的会自动失效。
-
-### 2. 在扩展填两个字段
-
-点击扩展图标 → 齿轮图标进入设置：
-
-- **服务器地址**：HappyClaw 的完整 URL，例如 `https://claw.shakaka.xyz`
-- **API Token**：上一步复制的 `hc_xxx...`
-
-### 3. 测试连接 → 保存
-
-点「测试连接」看到成功提示，再点「保存设置」即可。
+1. 点击扩展图标，进入设置页面（齿轮图标）
+2. 输入 HappyClaw 服务器地址（如 `https://your-happyclaw.example.com`）
+3. 输入 API Token
+4. 点击「测试连接」验证配置
+5. 点击「保存设置」
 
 ## 使用
 
@@ -57,13 +46,9 @@
 1. 选中文本（可选）
 2. 按 `Ctrl+Shift+S`（Mac: `Cmd+Shift+S`）
 
-## 鉴权
-
-扩展通过 `Authorization: Bearer hc_xxx...` 调用 HappyClaw API。Token 是**作用域受限**的（scope=`knowledge`），只能访问 `/api/knowledge/*` 接口，拿不到其它账号权限。Token 可以在 HappyClaw 设置页随时吊销。
-
 ## API 端点
 
-扩展调用以下 HappyClaw API（均需 Bearer Token）：
+扩展调用以下 HappyClaw API：
 
 | 方法 | 端点 | 说明 |
 |------|------|------|
@@ -71,7 +56,9 @@
 | POST | `/api/knowledge/categories` | 创建分类 |
 | DELETE | `/api/knowledge/categories/:id` | 删除分类 |
 | POST | `/api/knowledge/clips` | 保存内容片段 |
-| GET | `/api/health` | 连通性测试（无需鉴权）|
+| GET | `/api/health` | 连通性测试 |
+
+> 注意: 这些 API 端点需要在 HappyClaw 后端实现后才能正常工作。
 
 ## 文件结构
 
